@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YouTube Script Extractor UI</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem auto; max-width: 900px; line-height: 1.4; }
+      form { display: grid; gap: .8rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+      label { font-weight: 600; }
+      input[type="text"], select { width: 100%; padding: .55rem; }
+      button { width: fit-content; padding: .6rem 1rem; cursor: pointer; }
+      .error { margin-top: 1rem; color: #8b0000; background: #ffe8e8; border: 1px solid #ffbdbd; padding: .7rem; }
+      .result { margin-top: 1rem; }
+      pre { white-space: pre-wrap; background: #f7f7f7; border: 1px solid #ddd; padding: 1rem; border-radius: 8px; }
+      .hint { color: #666; font-size: .93rem; }
+    </style>
+  </head>
+  <body>
+    <h1>YouTube Script Extractor</h1>
+    <p>Pega la URL de YouTube o un ID de video y extrae su guion/transcripción.</p>
+
+    <form method="post" action="/extract">
+      <div>
+        <label for="video">URL o ID del video</label>
+        <input id="video" type="text" name="video" required value="{{ (previous.video if previous else '')|e }}" placeholder="https://www.youtube.com/watch?v=..." />
+      </div>
+
+      <div>
+        <label for="langs">Idiomas subtítulos (prioridad)</label>
+        <input id="langs" type="text" name="langs" value="{{ (previous.langs if previous else 'es en')|e }}" />
+        <div class="hint">Ejemplo: <code>es en</code> o <code>es,en</code></div>
+      </div>
+
+      <div>
+        <label for="fallback_model">Modelo Whisper fallback</label>
+        <select id="fallback_model" name="fallback_model">
+          {% set selected_model = previous.fallback_model if previous else 'small' %}
+          {% for model in ['tiny', 'base', 'small', 'medium', 'large-v3'] %}
+            <option value="{{ model }}" {% if selected_model == model %}selected{% endif %}>{{ model }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="whisper_language">Idioma Whisper (opcional)</label>
+        <input id="whisper_language" type="text" name="whisper_language" value="{{ (previous.whisper_language if previous else '')|e }}" placeholder="es" />
+      </div>
+
+      <div>
+        <label>
+          <input type="checkbox" name="timestamps" {% if previous and previous.timestamps %}checked{% endif %} /> Incluir timestamps
+        </label>
+      </div>
+
+      <button type="submit">Extraer transcripción</button>
+    </form>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if transcript %}
+      <div class="result">
+        <h2>Resultado</h2>
+        <pre>{{ transcript }}</pre>
+      </div>
+    {% endif %}
+  </body>
+</html>
